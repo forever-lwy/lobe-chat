@@ -1,9 +1,9 @@
 name: Publish Database Docker Image
 
 on:
-  workflow_dispatch:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main  # 假设您的主分支名为 main，如果是 master 或其他名称请相应修改
 
 jobs:
   push_to_registry:
@@ -19,6 +19,16 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Generate build number
+        id: buildnumber
+        uses: einaregilsson/build-number@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -26,9 +36,9 @@ jobs:
           images: foreveryu/lobe-chat-database
           tags: |
             type=raw,value=latest
-            type=ref,event=tag
+            type=raw,value=${{ steps.date.outputs.date }}.${{ steps.buildnumber.outputs.build_number }}
 
-      - name: Set up Docker Buildx- 名称：设置 Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push Docker image
