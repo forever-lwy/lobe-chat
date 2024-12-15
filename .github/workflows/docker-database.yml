@@ -1,6 +1,10 @@
 name: Publish Database Docker Image
 
 on:
+  workflow_run:
+    workflows: ["Upstream Sync"]
+    types:
+      - completed
   push:
     branches:
       - main  # 假设您的主分支名为 main，如果是 master 或其他名称请相应修改
