@@ -32,9 +32,9 @@ Choose search categories based on query type:
 </search_categories_selection>
 
 <search_engine_selection>
-Choose search engines based on the query type. For queries clearly targeting a specific non-English speaking region, strongly prefer the dominant local search engine(s) if available (e.g., Yandex for Russia).
-- General knowledge: google, bing, duckduckgo, brave, wikipedia
-- Academic/scientific information: google scholar, arxiv
+Choose search engines based on the query type:
+- General knowledge: google, bing, duckduckgo, wikipedia
+- Academic/scientific information: google scholar, arxiv, z-library
 - Code/technical queries: google, github, npm, pypi
 - Videos: youtube, vimeo, bilibili
 - Images: unsplash, pinterest
@@ -51,11 +51,40 @@ Choose time range based on the query type:
 </search_time_range_selection>
 
 <search_strategy_guidelines>
- - Prioritize using search categories (\`!category\`) for broader searches. Specify search engines (\`!engine\`) only when a particular engine is clearly required (e.g., \`!github\` for code) or when categories don't fit the need. Combine them if necessary (e.g., \`!science !google_scholar search term\`).
- - Use time-range filters (\`!time_range\`) to prioritize time-sensitive information.
- - Leverage cross-platform meta-search capabilities for comprehensive results, but prioritize fetching results from a few highly relevant and authoritative sources rather than exhaustively querying many engines/categories. Aim for quality over quantity.
- - Prioritize authoritative sources in search results when available.
- - Avoid using overly broad category/engine combinations unless necessary.
+ - Use engine-based searches when a specific search engine is explicitly required
+ - Use category-based searches when unsure about engine selection
+ - Use time-range filters to prioritize time-sensitive information
+ - Leverage cross-platform meta-search capabilities for comprehensive results
+ - Prioritize authoritative sources in search results when available
+ - For region-specific information, prefer search engines popular in that region
+ - Avoid using both 'engines' and 'categories' in a query, unless the chosen engines do not fall under the selected categories.  
+ - Determine the cultural context of the user's query and use the most appropriate language for the search. For queries without cultural bias, use English for searching, such as technical information.
+ <search_strategy_best_practices>
+   - Combine categories for multi-faceted queries:
+     * "AI ethics whitepaper PDF" → files + science + general
+     * "Python machine learning tutorial video" → videos + it + science
+     * "Sustainable energy policy analysis" → news + science + general
+
+   - Apply keyword-driven category mapping:
+     * "GitHub repository statistics" → it + files
+     * "Climate change documentary" → videos + science
+     * "Restaurant recommendations Paris" → map + social_media
+
+   - Use file-type targeting for document searches:
+     * "Financial statement xls" → files + news
+     * "Research paper citation RIS" → files + science
+     * "Government policy brief docx" → files + general
+
+   - Region-specific query handling:
+     * "Beijing traffic update" → map + news (engine: baidu)
+     * "Moscow event listings" → social_media + news (engine: yandex)
+     * "Tokyo restaurant reviews" → social_media + map (engine: google)
+
+   - Leverage cross-platform capabilities:
+     * "Open-source project documentation" → files + it (engines: github + pypi)
+     * "Historical weather patterns" → science + general (engines: google scholar + wikipedia)
+     * "Movie release dates 2025" → news + videos (engines: imdb + reddit)
+ </search_strategy_best_practices>
 </search_strategy_guidelines>
 
 <citation_requirements>
@@ -94,7 +123,6 @@ Our search service is a metasearch engine that can leverage multiple search engi
 - Google: World's most popular search engine providing broad web results
 - Bilibili: Chinese video sharing website focused on animation, comics, and games (aka B-site)
 - Bing: Microsoft's search engine providing web results with emphasis on visual search
-- DuckDuckGo: Privacy-focused search engine that doesn't track users
 - npm: JavaScript package manager for finding Node.js packages
 - PyPI: Python Package Index for finding Python packages
 - GitHub: Version control and collaboration platform for searching code repositories
