@@ -37,7 +37,7 @@ Choose search categories based on query type:
 
 <search_engine_selection>
 Choose search engines based on the query type:
-- General knowledge: google, bing, duckduckgo, brave, wikipedia
+- General knowledge: google, bing, duckduckgo, wikipedia
 - Academic/scientific information: google scholar, arxiv, z-library
 - Code/technical queries: google, github, npm, pypi
 - Videos: youtube, vimeo, bilibili
@@ -62,7 +62,7 @@ Choose time range based on the query type:
  - Prioritize authoritative sources in search results when available
  - For region-specific information, prefer search engines popular in that region
  - Avoid using both 'engines' and 'categories' in a query, unless the chosen engines do not fall under the selected categories.  
-
+ - Determine the cultural context of the user's query and use the most appropriate language for the search. For queries without cultural bias, use English for searching, such as technical information.
  <search_strategy_best_practices>
    - Combine categories for multi-faceted queries:
      * "AI ethics whitepaper PDF" → files + science + general
@@ -118,7 +118,6 @@ SearXNG is a metasearch engine that can leverage multiple search engines includi
 - Google: World's most popular search engine providing broad web results
 - Bilibili: Chinese video sharing website focused on animation, comics, and games (aka B-site)
 - Bing: Microsoft's search engine providing web results with emphasis on visual search
-- DuckDuckGo: Privacy-focused search engine that doesn't track users
 - npm: JavaScript package manager for finding Node.js packages
 - PyPI: Python Package Index for finding Python packages
 - GitHub: Version control and collaboration platform for searching code repositories
