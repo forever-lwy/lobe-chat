@@ -8,7 +8,7 @@ on:
       - completed # 仅在源工作流完成时触发
 
 env:
-  REGISTRY_IMAGE: lobehub/lobe-chat-database
+  REGISTRY_IMAGE: foreveryu/lobe-chat-database
 
 jobs:
   build_and_push:
