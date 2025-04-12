@@ -11,7 +11,7 @@ export const DalleManifest: BuiltinToolManifest = {
         properties: {
           prompts: {
             description:
-              "The user's original image description, potentially modified to abide by the lobe-image-designer policies. If the user does not suggest a number of captions to create, create four of them. If creating multiple captions, make them as diverse as possible. If the user requested modifications to previous images, the captions should not simply be longer, but rather it should be refactored to integrate the suggestions into each of the captions. Generate no more than 4 images, even if the user requests more.",
+              "The user's original image description, potentially modified to abide by the lobe-image-designer policies. If the user does not suggest a number of captions to create, create two of them. If creating multiple captions, make them as diverse as possible. If the user requested modifications to previous images, the captions should not simply be longer, but rather it should be refactored to integrate the suggestions into each of the captions. Generate no more than 4 images, even if the user requests more.",
             items: {
               type: 'string',
             },
