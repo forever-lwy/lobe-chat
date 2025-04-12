@@ -48,6 +48,8 @@ jobs:
           file: ./Dockerfile.database
           platforms: linux/amd64
           push: true
-          tags: ${{ env.REGISTRY_IMAGE }}:${{ env.IMAGE_TAG }}
+          tags: | # 使用多行字符串来指定多个标签
+            ${{ env.REGISTRY_IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
