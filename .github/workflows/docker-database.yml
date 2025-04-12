@@ -13,8 +13,8 @@ env:
 jobs:
   build_and_push:
     name: Build and Push Docker Image
-    # 仅当触发的 workflow_run 事件是成功的 sync.yml 运行时才执行
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # 当手动触发 或 触发的 workflow_run 事件是成功的 sync.yml 运行时才执行
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       # 当由 workflow_run 触发时，actions/checkout 会自动检出
