@@ -2,10 +2,7 @@ name: Publish Docker Pglite Image
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
-  pull_request:
-    types: [synchronize, labeled, unlabeled]
+  
 
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}

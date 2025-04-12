@@ -1,9 +1,6 @@
 name: Issue Translate
 on:
-  issue_comment:
-    types: [created]
-  issues:
-    types: [opened]
+  workflow_dispatch:
 
 jobs:
   build:

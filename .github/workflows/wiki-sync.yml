@@ -2,12 +2,7 @@ name: Wiki Sync
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'docs/wiki/**'
-    branches:
-      - main
-
+  
 jobs:
   update-wiki:
     runs-on: ubuntu-latest
