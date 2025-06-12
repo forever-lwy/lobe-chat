@@ -11,6 +11,13 @@ export interface ExaSearchParameters {
   startCrawlDate?: string;
   startPublishedDate?: string;
   type?: string;
+  contents?: { // Added contents property
+    summary?: {
+      query?: string;
+    };
+    livecrawl?: string;
+    livecrawlTimeout?: number;
+  };
 }
 
 interface ExaCostDollars {
