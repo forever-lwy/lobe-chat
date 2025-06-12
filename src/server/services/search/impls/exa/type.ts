@@ -31,7 +31,7 @@ interface ExaResults {
   image?: string;
   publishedDate?: string | null;
   score?: number | null;
-  summery?: string;
+  summary?: string;
   text: string;
   title: string;
   url: string;
