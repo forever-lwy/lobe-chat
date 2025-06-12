@@ -28,9 +28,17 @@ export class ExaImpl implements SearchServiceImpl {
     const endpoint = urlJoin(this.baseUrl, '/search');
 
     const defaultQueryParams: ExaSearchParameters = {
-      numResults: 15,
+      numResults: 25, // Changed from 15 to 25
       query,
       type: 'auto',
+      contents: { // Added contents object
+        summary: {
+          query:
+            'Summarize all content on the webpage that is relevant to my query without omitting any details. If the webpage content is unrelated to the query, simply mention the main topic of the webpage briefly.',
+        },
+        livecrawl: 'preferred',
+        livecrawlTimeout: 1000,
+      },
     };
 
     let body: ExaSearchParameters = {
