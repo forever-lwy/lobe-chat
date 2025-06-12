@@ -1,11 +1,11 @@
 export interface ExaSearchParameters {
   category?: string;
   contents?: { // Added contents property
+    livecrawl?: string;
+    livecrawlTimeout?: number;
     summary?: {
       query?: string;
     };
-    livecrawl?: string;
-    livecrawlTimeout?: number;
   };
   endCrawlDate?: string;
   endPublishedDate?: string;
