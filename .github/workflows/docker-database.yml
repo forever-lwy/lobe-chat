@@ -1,55 +1,163 @@
 name: Publish Database Docker Image
 
 on:
-  workflow_dispatch: # 允许手动触发
-  workflow_run: # 当其他工作流运行时触发
-    workflows: ["Upstream Sync"] # 指定触发此工作流的源工作流名称 (来自 sync.yml 的 name)
-    types:
-      - completed # 仅在源工作流完成时触发
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Upstream Sync"]
+    types: [completed]
+  release:
+    types: [published]
+  pull_request:
+    types: [synchronize, labeled, unlabeled]
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 env:
   REGISTRY_IMAGE: foreveryu/lobe-chat-database
 
 jobs:
-  build_and_push:
-    name: Build and Push Docker Image
-    # 当手动触发 或 触发的 workflow_run 事件是成功的 sync.yml 运行时才执行
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-latest
+  build:
+    # 仅当 PR 被打上 "Build Docker" 标签时构建；其他事件正常构建
+    if: |
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.labels.*.name, 'Build Docker')) ||
+      github.event_name != 'pull_request'
+
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            os: ubuntu-latest
+          - platform: linux/arm64
+            os: ubuntu-24.04-arm64
+
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.platform }} Image
+
     steps:
-      # 当由 workflow_run 触发时，actions/checkout 会自动检出
-      # 触发工作流 (sync.yml) 运行时的那个 commit SHA。
-      # 这正是 sync.yml 推送到 main 分支的最新代码。
-      - name: Checkout repository
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Checkout base
         uses: actions/checkout@v5
         with:
-          # 不需要指定 ref，它会自动使用触发 workflow_run 的 commit
-          fetch-depth: 0 # 获取所有历史记录以确保能获取 commit SHA
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
+      # PR 元数据（用于 pr- 前缀标签）
+      - name: Generate PR metadata
+        if: github.event_name == 'pull_request'
+        id: pr_meta
+        run: |
+          branch_name="${{ github.head_ref }}"
+          sanitized_branch=$(echo "${branch_name}" | sed -E 's/[^a-zA-Z0-9_.-]+/-/g')
+          echo "pr_tag=${sanitized_branch}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            # PR 构建使用特殊的 pr- 标签（不新增环境变量，直接硬编码）
+            type=raw,value=pr-${{ steps.pr_meta.outputs.pr_tag }},enable=${{ github.event_name == 'pull_request' }}
+            # release 构建使用版本号（非 PR 时启用）
+            type=semver,pattern={{version}},enable=${{ github.event_name != 'pull_request' }}
+            # 非 PR 时同时推 latest
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
+
+      - name: Docker login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
-      - name: Generate Image Tag
-        id: generate_tag
-        run: |
-          # 使用 github.sha，它代表触发此运行的 commit
-          echo "IMAGE_TAG=$(date +'%Y%m%d-%H%M%S')-$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
+      - name: Get commit SHA
+        if: github.ref == 'refs/heads/main'
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+      - name: Build and export
+        id: build
+        uses: docker/build-push-action@v6
         with:
+          platforms: ${{ matrix.platform }}
           context: .
           file: ./Dockerfile.database
-          platforms: linux/amd64
-          push: true
-          tags: | # 使用多行字符串来指定多个标签
-            ${{ env.REGISTRY_IMAGE }}:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            SHA=${{ steps.vars.outputs.sha_short }}
+          # 按 digest 推送，后续在 merge 作业中创建多架构清单并打标签
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          rm -rf /tmp/digests
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Merge
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # PR 元数据（用于 pr- 前缀标签）
+      - name: Generate PR metadata
+        if: github.event_name == 'pull_request'
+        id: pr_meta
+        run: |
+          branch_name="${{ github.head_ref }}"
+          sanitized_branch=$(echo "${branch_name}" | sed -E 's/[^a-zA-Z0-9_.-]+/-/g')
+          echo "pr_tag=${sanitized_branch}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=pr-${{ steps.pr_meta.outputs.pr_tag }},enable=${{ github.event_name == 'pull_request' }}
+            type=semver,pattern={{version}},enable=${{ github.event_name != 'pull_request' }}
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
