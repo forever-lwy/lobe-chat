@@ -24,7 +24,7 @@ jobs:
     # 仅当 PR 被打上 "Build Docker" 标签时构建；其他事件正常构建
     if: |
       (github.event_name == 'pull_request' &&
-       contains(github.event.pull_request.labels.*.name, 'Build Docker')) ||
+       contains(github.event.pull_request.labels.*.name, 'trigger:build-docker')) ||
       github.event_name != 'pull_request'
 
     strategy:
